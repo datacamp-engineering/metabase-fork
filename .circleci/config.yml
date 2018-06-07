@@ -5,7 +5,7 @@ jobs:
       - image: java:openjdk-8-jre-alpine
     steps:
       - checkout
-      - ./bin/ci
+      - run: ./bin/ci
 
 workflows:
   version: 2
