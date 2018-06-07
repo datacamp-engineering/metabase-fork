@@ -1,6 +1,7 @@
 (ns metabase.driver.redshift
   "Amazon Redshift Driver."
   (:require [clojure.java.jdbc :as jdbc]
+            [clojure.set :as set]
             [clojure.string :as str]
             [honeysql.core :as hsql]
             [metabase
@@ -67,6 +68,19 @@
                              :schema (:dest-table-schema fk)}
           :dest-column-name (:dest-column-name fk)})))
 
+(defn- describe-external-databases [database]
+  "Fetch the external tables used by Redshift Spectrum"
+  (set (jdbc/query (sql/db->jdbc-connection-spec database)
+                            ["SELECT schemaname as \"schema\",
+                                     tablename as \"name\"
+                             FROM svv_external_tables"
+                             ])))
+
+(defn- describe-database
+  "Custom implementation of `describe-database` for Redshift including external tables"
+  [driver database]
+  (update (sql/describe-database driver database) :tables (u/rpartial set/union (describe-external-databases database))))
+
 (defrecord RedshiftDriver []
   :load-ns true
   clojure.lang.Named
@@ -82,6 +96,7 @@
   (merge (sql/IDriverSQLDefaultsMixin)
          {:date-interval            (u/drop-first-arg date-interval)
           :describe-table-fks       (u/drop-first-arg describe-table-fks)
+          :describe-database        describe-database
           :details-fields           (constantly (ssh/with-tunnel-config
                                                   [(assoc driver/default-host-details
                                                      :placeholder (tru "my-cluster-name.abcd1234.us-east-1.redshift.amazonaws.com"))
