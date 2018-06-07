@@ -4,8 +4,9 @@ jobs:
     docker:
       - image: java:openjdk-8-jre-alpine
     steps:
+      - run: apk add --update git
       - checkout
-      - run: apk add --update nodejs git wget bash python make g++ java-cacerts ttf-dejavu fontconfig && npm install -g yarn && ln -sf "${JAVA_HOME}/bin/"* "/usr/bin/"
+      - run: apk add --update nodejs wget bash python make g++ java-cacerts ttf-dejavu fontconfig && npm install -g yarn && ln -sf "${JAVA_HOME}/bin/"* "/usr/bin/"
       - run: wget -O /usr/local/bin/lein https://raw.github.com/technomancy/leiningen/stable/bin/lein && chmod +x /usr/local/bin/lein
       - run: ./bin/ci
 
