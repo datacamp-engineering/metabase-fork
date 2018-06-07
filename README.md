@@ -1,3 +1,7 @@
+# DataCamp Metabase
+This is a Metabase fork containing DataCamp changes:
+- Update Redshift driver to correctly discover Spectrum tables
+
 # Metabase
 Metabase is the easy, open source way for everyone in your company to ask questions and learn from data.
 
