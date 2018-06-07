@@ -23,7 +23,6 @@ jobs:
           root: target
           paths:
             - uberjar/metabase.jar
-
   release:
     environment:
       SERVICE: metabase
@@ -32,6 +31,7 @@ jobs:
         aws_auth: &ecr_credentials
           aws_access_key_id: $STAGING_AWS_ACCESS_KEY_ID
           aws_secret_access_key: $STAGING_AWS_SECRET_ACCESS_KEY
+    steps:
       - checkout
       - setup_remote_docker
       - attach_workspace:
