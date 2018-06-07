@@ -24,6 +24,32 @@ jobs:
           paths:
             - uberjar/metabase.jar
 
+  release:
+    environment:
+      SERVICE: metabase
+    docker:
+      - image: ${STAGING_ECR_URL}/docker-deploy
+        aws_auth: &ecr_credentials
+          aws_access_key_id: $STAGING_AWS_ACCESS_KEY_ID
+          aws_secret_access_key: $STAGING_AWS_SECRET_ACCESS_KEY
+      - checkout
+      - setup_remote_docker
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: Move jar
+          command: |
+            cp /tmp/workspace/uberjar/metabase.jar bin/docker/
+            cd bin/docker
+      - run:
+          name: Build application docker image
+          command: |
+            docker build -t ${STAGING_ECR_URL}/${SERVICE}:${CIRCLE_SHA1} .
+      - run:
+          name: Push image
+          command: |
+            ENVIRONMENT=staging DOCKER_IMAGE="${STAGING_ECR_URL}/${SERVICE}" TAG=${CIRCLE_SHA1} /docker-push.sh
+
 workflows:
   version: 2
   test:
@@ -34,3 +60,7 @@ workflows:
           context: org-global
           requires:
             - test
+      - release:
+          context: org-global
+          requires:
+            - build
