@@ -1,0 +1,15 @@
+version: 2
+jobs:
+  test:
+    docker:
+      - image: java:openjdk-8-jre-alpine
+    steps:
+      - checkout
+      - ./bin/ci
+
+workflows:
+  version: 2
+  test:
+    jobs:
+      - test:
+          context: org-global
