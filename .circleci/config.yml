@@ -40,11 +40,10 @@ jobs:
           name: Move jar
           command: |
             cp /tmp/workspace/uberjar/metabase.jar bin/docker/
-            cd bin/docker
       - run:
           name: Build application docker image
           command: |
-            docker build -t ${STAGING_ECR_URL}/${SERVICE}:${CIRCLE_SHA1} .
+            docker build -t ${STAGING_ECR_URL}/${SERVICE}:${CIRCLE_SHA1} bin/docker/
       - run:
           name: Push image
           command: |
