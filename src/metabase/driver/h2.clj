@@ -61,6 +61,7 @@
    :SIGNED                      :type/Integer
    :SMALLDATETIME               :type/DateTime
    :SMALLINT                    :type/Integer
+   :string                      :type/Text
    :TEXT                        :type/Text
    :TIME                        :type/Time
    :TIMESTAMP                   :type/DateTime
