@@ -231,6 +231,7 @@ workflows:
             - fe-deps
             - build-uberjar
       - release:
+          context: org-global
           requires:
             - be-linter-eastwood
             - be-linter-docstring-checker
