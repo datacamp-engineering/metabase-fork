@@ -121,6 +121,15 @@ jobs:
           command: yarn run test-unit
           no_output_timeout: 5m
 
+  fe-build:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: /home/circleci/
+      - run:
+          name: Build frontend
+          command: NODE_ENV=production ./node_modules/.bin/webpack --bail
+
   build-uberjar:
     <<: *defaults
     steps:
@@ -218,8 +227,12 @@ workflows:
       - fe-tests-unit:
           requires:
             - fe-deps
+      - fe-build:
+          requires:
+            - fe-deps
       - build-uberjar:
           requires:
+            - fe-build
             - be-deps
       - fe-tests-integrated:
           requires:
