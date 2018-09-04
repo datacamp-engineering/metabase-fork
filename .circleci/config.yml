@@ -232,11 +232,11 @@ workflows:
             - build-uberjar
       - release:
           requires:
-            - fe-tests-integrated
             - be-linter-eastwood
             - be-linter-docstring-checker
             - be-linter-bikeshed
             - be-linter-reflection-warnings
+            - be-tests
             - fe-tests-karma
             - fe-tests-unit
             - build-uberjar
