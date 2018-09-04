@@ -129,6 +129,13 @@ jobs:
       - run:
           name: Build frontend
           command: NODE_ENV=production ./node_modules/.bin/webpack --bail
+      - persist_to_workspace:
+          root: /home/circleci/
+          paths:
+            - resources/frontend_client/app/dist/
+            - resources/frontend_client/index.html
+            - resources/frontend_client/public.html
+            - resources/frontend_client/embed.html
 
   build-uberjar:
     <<: *defaults
@@ -189,11 +196,11 @@ jobs:
       - run:
           name: Build application docker image
           command: |
-            docker build -t ${STAGING_ECR_URL}/${SERVICE}:${CIRCLE_SHA1} bin/docker/
+            docker build -t ${STAGING_ECR_URL}/${SERVICE}:${CIRCLE_BRANCH}-${CIRCLE_BUILD_NUM} bin/docker/
       - run:
           name: Push image
           command: |
-            ENVIRONMENT=staging DOCKER_IMAGE="${STAGING_ECR_URL}/${SERVICE}" TAG=${CIRCLE_SHA1} /docker-push.sh
+            ENVIRONMENT=staging DOCKER_IMAGE="${STAGING_ECR_URL}/${SERVICE}" TAG=${CIRCLE_BRANCH}-${CIRCLE_BUILD_NUM} /docker-push.sh
 
 workflows:
   version: 2
