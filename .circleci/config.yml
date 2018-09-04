@@ -230,3 +230,6 @@ workflows:
             - be-deps
             - fe-deps
             - build-uberjar
+      - release:
+          requires:
+            - fe-tests-integrated

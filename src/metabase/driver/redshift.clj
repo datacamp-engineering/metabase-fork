@@ -69,7 +69,6 @@
           :dest-column-name (:dest-column-name fk)})))
 
 (defn- describe-external-databases [database]
-  "Fetch the external tables used by Redshift Spectrum"
   (set (jdbc/query (sql/db->jdbc-connection-spec database)
                             ["SELECT schemaname as \"schema\",
                                      tablename as \"name\"
