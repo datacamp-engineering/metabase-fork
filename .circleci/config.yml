@@ -132,10 +132,10 @@ jobs:
       - persist_to_workspace:
           root: /home/circleci/
           paths:
-            - resources/frontend_client/app/dist/
-            - resources/frontend_client/index.html
-            - resources/frontend_client/public.html
-            - resources/frontend_client/embed.html
+            - metabase/metabase/resources/frontend_client/app/dist/
+            - metabase/metabase/resources/frontend_client/index.html
+            - metabase/metabase/resources/frontend_client/public.html
+            - metabase/metabase/resources/frontend_client/embed.html
 
   build-uberjar:
     <<: *defaults
