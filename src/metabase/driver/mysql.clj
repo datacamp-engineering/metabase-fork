@@ -88,10 +88,12 @@
   "Append `default-connection-args-string` to the connection string in CONNECTION-DETAILS, and an additional option to
   explicitly disable SSL if appropriate. (Newer versions of MySQL will complain if you don't explicitly disable SSL.)"
   {:argslist '([connection-spec details])}
-  [{connection-string :subname, :as connection-spec} {ssl? :ssl}]
-  (assoc connection-spec
-    :subname (str connection-string "?" default-connection-args-string (when-not ssl?
-                                                                         "&useSSL=false"))))
+  [connection-spec {ssl? :ssl}]
+  (update connection-spec :subname
+          (fn [subname]
+            (let [join-char (if (str/includes? subname "?") "&" "?")]
+              (str subname join-char default-connection-args-string (when-not ssl?
+                                                                      "&useSSL=false"))))))
 
 (defn- connection-details->spec [details]
   (-> details
@@ -173,7 +175,7 @@
   (let [date-str (du/format-date :date-hour-minute-second-ms date)]
     (sql/make-stmt-subs (-> (create-hsql-for-date date date-str)
                             hx/->date
-                            (hsql/format :quoting (sql/quote-style (MySQLDriver.)))
+                            (hsql/format :quoting :mysql, :allow-dashed-names? true)
                             first)
                         [date-str])))
 

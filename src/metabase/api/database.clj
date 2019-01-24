@@ -13,6 +13,7 @@
             [metabase.api
              [common :as api]
              [table :as table-api]]
+            [metabase.mbql.util :as mbql.u]
             [metabase.models
              [card :refer [Card]]
              [database :as database :refer [Database protected-password]]
@@ -21,7 +22,6 @@
              [interface :as mi]
              [permissions :as perms]
              [table :refer [Table]]]
-            [metabase.query-processor.util :as qputil]
             [metabase.sync
              [analyze :as analyze]
              [field-values :as sync-field-values]
@@ -70,8 +70,7 @@
 (defn- card-database-supports-nested-queries? [{{database-id :database} :dataset_query, :as card}]
   (when database-id
     (when-let [driver (driver/database-id->driver database-id)]
-      (and (driver/driver-supports? driver :nested-queries)
-           (mi/can-read? card)))))
+      (driver/driver-supports? driver :nested-queries))))
 
 (defn- card-has-ambiguous-columns?
   "We know a card has ambiguous columns if any of the columns that come back end in `_2` (etc.) because that's what
@@ -97,14 +96,7 @@
    use queries with those aggregations as source queries. This function determines whether CARD is using one
    of those queries so we can filter it out in Clojure-land."
   [{{{aggregations :aggregation} :query} :dataset_query}]
-  (when (seq aggregations)
-    (some (fn [[ag-type]]
-            (contains? #{:cum-count :cum-sum} (qputil/normalize-token ag-type)))
-          ;; if we were passed in old-style [ag] instead of [[ag1], [ag2]] convert to new-style so we can iterate
-          ;; over list of aggregations
-          (if-not (sequential? (first aggregations))
-            [aggregations]
-            aggregations))))
+  (mbql.u/match aggregations #{:cum-count :cum-sum}))
 
 (defn- source-query-cards
   "Fetch the Cards that can be used as source queries (e.g. presented as virtual tables)."
@@ -113,6 +105,7 @@
           :result_metadata [:not= nil] :archived false
           {:order-by [[:%lower.name :asc]]}) <>
     (filter card-database-supports-nested-queries? <>)
+    (filter mi/can-read? <>)
     (remove card-uses-unnestable-aggregation? <>)
     (remove card-has-ambiguous-columns? <>)
     (hydrate <> :collection)))
@@ -576,7 +569,7 @@
   [id schema]
   (api/read-check Database id)
   (api/check-403 (can-read-schema? id schema))
-  (->> (db/select Table :db_id id, :schema schema, {:order-by [[:name :asc]]})
+  (->> (db/select Table :db_id id, :schema schema, :active true, {:order-by [[:name :asc]]})
        (filter mi/can-read?)
        seq
        api/check-404))

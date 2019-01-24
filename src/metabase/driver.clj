@@ -22,9 +22,11 @@
             [metabase.models
              [database :refer [Database]]
              [setting :refer [defsetting]]]
+            [metabase.query-processor.store :as qp.store]
             [metabase.sync.interface :as si]
-            [metabase.util.date :as du]
-            [puppetlabs.i18n.core :refer [trs tru]]
+            [metabase.util
+             [date :as du]
+             [i18n :refer [trs tru]]]
             [schema.core :as s]
             [toucan.db :as db])
   (:import clojure.lang.Keyword
@@ -201,6 +203,7 @@
       \"sum(x) + count(y)\" or \"avg(x + y)\"
   *  `:nested-queries` - Does the driver support using a query as the `:source-query` of another MBQL query? Examples
       are CTEs or subselects in SQL queries.
+  *  `:binning` - Does the driver support binning as specified by the `binning-strategy` clause?
   *  `:no-case-sensitivity-string-filter-options` - An anti-feature: does this driver not let you specify whether or not
       our string search filter clauses (`:contains`, `:starts-with`, and `:ends-with`, collectively the equivalent of
       SQL `LIKE` are case-senstive or not? This informs whether we should present you with the 'Case Sensitive' checkbox
@@ -395,13 +398,16 @@
   parses the date returned preserving it's timezone"
   [native-query date-formatters]
   (fn [driver database]
+    {:pre [(map? database)]}
     (let [settings (when-let [report-tz (report-timezone-if-supported driver)]
                      {:settings {:report-timezone report-tz}})
           time-str (try
-                     (->> (merge settings {:database database, :native {:query native-query}})
-                          (execute-query driver)
-                          :rows
-                          ffirst)
+                     (qp.store/with-store
+                       (qp.store/store-database! database)
+                       (->> (merge settings {:database database, :native {:query native-query}})
+                            (execute-query driver)
+                            :rows
+                            ffirst))
                      (catch Exception e
                        (throw
                         (Exception.
@@ -412,8 +418,9 @@
         (catch Exception e
           (throw
            (Exception.
-            (tru "Unable to parse date string ''{0}'' for database engine ''{1}''"
-                    time-str (-> database :engine name)) e)))))))
+            (str
+             (tru "Unable to parse date string ''{0}'' for database engine ''{1}''"
+                  time-str (-> database :engine name))) e)))))))
 
 (defn class->base-type
   "Return the `Field.base_type` that corresponds to a given class returned by the DB.

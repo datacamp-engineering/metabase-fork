@@ -12,8 +12,8 @@
             [metabase.driver.generic-sql.query-processor :as sqlqp]
             [metabase.util
              [honeysql-extensions :as hx]
-             [ssh :as ssh]]
-            [puppetlabs.i18n.core :refer [tru]]))
+             [i18n :refer [tru]]
+             [ssh :as ssh]]))
 
 (defrecord OracleDriver []
   :load-ns true
@@ -243,7 +243,7 @@
 (defn- remove-rownum-column
   "Remove the `:__rownum__` column from results, if present."
   [{:keys [columns rows], :as results}]
-  (if-not (contains? (set columns) :__rownum__)
+  (if-not (contains? (set columns) "__rownum__")
     results
     ;; if we added __rownum__ it will always be the last column and value so we can just remove that
     {:columns (butlast columns)
