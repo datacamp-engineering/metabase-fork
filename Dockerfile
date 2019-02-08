@@ -74,5 +74,7 @@ COPY --from=builder /app/source/bin/start /app/bin/
 # expose our default runtime port
 EXPOSE 3000
 
+HEALTHCHECK CMD curl --fail http://localhost:3000/ || exit 1
+
 # run it
 ENTRYPOINT ["/app/bin/start"]
